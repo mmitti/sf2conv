@@ -112,6 +112,7 @@ def __write(fo, fi, e):
         for i in e.data:
             __write(fo, fi, i)
     elif e.tag == "phdr":
+        e.size = 38 * len(e.data)
         fo.write(struct.pack("<4sl", e.tag.encode(), e.size))
         for i in e.data:
             fo.write(struct.pack("<20shhhlll", i.name.encode(), i.presentno, i.bank, i.bagIndex, i.r0, i.r1, i.r2))
