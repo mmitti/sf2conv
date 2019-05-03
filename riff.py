@@ -15,7 +15,7 @@ class Riff:
     def phdr(self):
         def f(r):
             if isinstance(r, PhdrRoot):
-                return r.data
+                return r
             if isinstance(r, Element):
                 return None
             for i in r.data:
@@ -69,7 +69,9 @@ class Phdr:
         self.r2 = r2
     def __str__(self):
         return f"{self.name}-{self.bank}/{self.presentno}"
-
+    def key(self):
+        return f"{self.bank}/{self.presentno}"
+            
 def __parse(f):
     tag = f.read(4).decode("ascii")
     size = struct.unpack_from("<l", f.read(4))[0]
