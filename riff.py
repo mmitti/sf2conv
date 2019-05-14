@@ -58,6 +58,10 @@ class PhdrRoot:
             s += str(i) + ", "
         s = s.rstrip(", ") + "]"
         return s
+    def sort(self):
+        eof = self.data[-1]
+        sd = sorted(self.data[:-1], key=lambda t: t.name)
+        self.data = [*sd, eof]
 class Phdr:
     def __init__(self, name, presentno, bank, bagIndex, r0, r1, r2):
         self.name = name

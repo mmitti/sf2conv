@@ -1,6 +1,8 @@
 import riff
 import sys
 import csv
+import codecs
+
 
 def getFreeIndex(t, no, default = None):
     if default is not None:
@@ -53,7 +55,7 @@ def save_imd_inst(inst, dst):
         [112, 119, "Map15", "パーカッシブ"],
         [120, 127, "Map16", "SFX"]
     ]
-    with open(dst, 'w') as f:
+    with codecs.open(dst, 'w', 'shift_jis') as f:
         f.write("[IMD]\n")
         f.write("Name=SF2Main\n")
         for t, i in zip(table, range(len(table))):
@@ -118,11 +120,12 @@ def main():
             
             sf2 = riff.read(f"{src_dir}/{sf2_name}")
             phdr_root = sf2.phdr()
+            phdr_root.sort()
             for i in phdr_root.data[:]:
                 if i.key() in black_list:
                     phdr_root.data.remove(i)
                     continue
-                if i.presentno == 255:
+                if i.name == "EOP":
                     continue
                 if i.bank == 128:
                     idx = getFreeIndex(drum_table, i.presentno)
