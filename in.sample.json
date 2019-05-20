@@ -1,0 +1,134 @@
+{
+    "imd": {
+        "map": [
+            {
+                "program_start": 0,
+                "program_end": 7,
+                "name": "ピアノ"
+            },
+            {
+                "program_start": 8,
+                "program_end": 15,
+                "name": "クロマチック・パーカッション"
+            },
+            {
+                "program_start": 16,
+                "program_end": 23,
+                "name": "オルガン"
+            },
+            {
+                "program_start": 24,
+                "program_end": 31,
+                "name": "ギター"
+            },
+            {
+                "program_start": 32,
+                "program_end": 39,
+                "name": "ベース"
+            },
+            {
+                "program_start": 40,
+                "program_end": 47,
+                "name": "ストリングス"
+            },
+            {
+                "program_start": 48,
+                "program_end": 55,
+                "name": "アンサンブル"
+            },
+            {
+                "program_start": 56,
+                "program_end": 63,
+                "name": "ブラス"
+            },
+            {
+                "program_start": 64,
+                "program_end": 71,
+                "name": "リード"
+            },
+            {
+                "program_start": 72,
+                "program_end": 79,
+                "name": "パイプ"
+            },
+            {
+                "program_start": 80,
+                "program_end": 87,
+                "name": "シンセリード"
+            },
+            {
+                "name":"SQUARE"
+            },
+            {
+                "program_start": 88,
+                "program_end": 95,
+                "name": "シンセパッド"
+            },
+            {
+                "program_start": 96,
+                "program_end": 103,
+                "name": "シンセSFX"
+            },
+            {
+                "program_start": 104,
+                "program_end": 111,
+                "name": "エスニック"
+            },
+            {
+                "program_start": 112,
+                "program_end": 119,
+                "name": "パーカッシブ"
+            },
+            {
+                "program_start": 120,
+                "program_end": 127,
+                "name": "SFX"
+            }
+        ]
+    },
+    "inst_name_table":{
+        "Acoustic":"A",
+        "Electoric":"E",
+        "Stereo":"St",
+        "Reverse":"Rev",
+        "Distortion":"Dist",
+        "Percussion":"Prec",
+        "Harmonic":"Harm",
+        "Synth":"Syn",
+        "Guiter":"Gt",
+        "Bass":"Bs",
+        "Trumpet":"Tp",
+        "Choir":"Cho",
+        "Pizzicato":"Pizz",
+        "Organ":"Org",
+        "Clavinet":"Clav",
+        "Cymbal":"Cym",
+        "Strings":"Str",
+        "String":"Str"
+    },
+    "dst": "dst_folder",
+    "dst_host_path": "dst_host_path",
+    "src": [
+        {
+            "sf2_name": "sample.sf2",
+            "suffix": "SP",
+            "defaul_bank": 0,
+            "imd_drum_map": "SP Dr",
+            "exclude": [
+                "bank/program",
+                "0/5"
+            ],
+            "custom_drums": [
+                "bank/program",
+                "0/4"
+            ]
+        },
+        {
+            "sf2_name": "SQUARE.sf2",
+            "suffix": "SQ",
+            "defaul_bank": 1,
+            "imd_drum_map": "OTHER",
+            "imd_inst_map_name": "SQUARE"
+        }
+    ]
+}
