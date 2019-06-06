@@ -112,7 +112,7 @@
         {
             "sf2_name": "sample.sf2",
             "suffix": "SP",
-            "defaul_bank": 0,
+            "default_bank": 0,
             "imd_drum_map": "SP Dr",
             "exclude": [
                 "bank/program",
@@ -126,7 +126,7 @@
         {
             "sf2_name": "SQUARE.sf2",
             "suffix": "SQ",
-            "defaul_bank": 1,
+            "default_bank": 1,
             "imd_drum_map": "OTHER",
             "imd_inst_map_name": "SQUARE"
         }
