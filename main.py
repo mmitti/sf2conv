@@ -7,12 +7,14 @@ import re
 from functools import cmp_to_key
 from collections import OrderedDict
 
+
 def t(table, key, default=None):
     if key in table:
         return table[key]
     return default
 
-def getFreeIndex(t, no, default = None):
+
+def getFreeIndex(t, no, default=None):
     if default is not None:
         no = default
     if not no in t:
@@ -25,6 +27,7 @@ def getFreeIndex(t, no, default = None):
             return i
     return None
 
+
 def save_table(inst, drum, dst):
     # program number, bank, map_name(None=Auto), name, src_bank, src_name
     with open(dst, 'w') as f:
@@ -33,10 +36,11 @@ def save_table(inst, drum, dst):
         for i in inst:
             f.write(",".join([str(j) for j in i]) + "\n")
         f.write("DRUM\n")
-        f.write("ProgamNumber,Bank,Map,Name,SF2Bank,SF2Name\n")            
+        f.write("ProgamNumber,Bank,Map,Name,SF2Bank,SF2Name\n")
         for i in drum:
             f.write(",".join([str(j) for j in i]) + "\n")
-                
+
+
 def save_vmssf(sf2_table, dst):
     with open(dst, 'w') as f:
         f.write("[SoundFonts]\n")
@@ -44,6 +48,7 @@ def save_vmssf(sf2_table, dst):
             f.write(f"sf{i}={n}\n")
             f.write(f"sf{i}.enabled=1\n")
             f.write(f"sf{i}.preload=0\n")
+
 
 def save_imd_inst(inst, imd_map, dst):
     table = OrderedDict()
@@ -54,7 +59,7 @@ def save_imd_inst(inst, imd_map, dst):
         if i[2] not in table:
             table[i[2]] = []
         table[i[2]].append(i)
-        
+
     with codecs.open(dst, 'w', 'shift_jis') as f:
         f.write("[IMD]\n")
         f.write("Name=SF2Main\n")
@@ -71,8 +76,9 @@ def save_imd_inst(inst, imd_map, dst):
                 pn = i[0]
                 n = i[3]
                 f.write(f"{idx}=N,{bn},0,{pn},{pn+1}-{bn}:{n}\n")
-                idx += 1                    
+                idx += 1
             f.write("\n")
+
 
 def save_imd_drum(drum, order_table, dst):
     table = OrderedDict()
@@ -83,7 +89,7 @@ def save_imd_drum(drum, order_table, dst):
         if i[2] not in table:
             table[i[2]] = []
         table[i[2]].append(i)
-    
+
     with open(dst, 'w') as f:
         f.write("[IMD]\n")
         f.write("Name=SF2Main Drum set\n")
@@ -101,9 +107,10 @@ def save_imd_drum(drum, order_table, dst):
                 pn = i[0]
                 n = i[3]
                 f.write(f"{idx}=N,{bn},0,{pn},Dr.:{n}\n")
-                idx += 1                    
+                idx += 1
             f.write("\n")
-                
+
+
 def convert_name(table, name, max_len, black_list=[]):
     for b in black_list:
         name = name.replace(b, "")
@@ -115,13 +122,15 @@ def convert_name(table, name, max_len, black_list=[]):
             return name
         name = name.replace(k, f"{v}.")
     return name
-    
+
+
 def imd_list_cmp(a, b):
     if a[0] == b[0]:
         if a[1] == b[1]:
             return 0
-        return -1 if a[1] < b[1] else 1 
+        return -1 if a[1] < b[1] else 1
     return -1 if a[0] < b[0] else 1
+
 
 def main():
     conf_path = sys.argv[1]
@@ -144,7 +153,7 @@ def main():
     imd_drum_list = []
     # ドラムの順番を保持するリスト
     imd_dram_order = []
-    
+
     for s in conf["src"]:
         sf2_name = s["sf2_name"]
         sf2_table.append(f"{host_root_path}\{sf2_name}")
@@ -152,7 +161,7 @@ def main():
         if len(suffix) != 0:
             suffix = f"[{suffix}]"
         bank = s["default_bank"]
-        
+
         sf2 = riff.read(f"{src_dir}/{sf2_name}")
         phdr_root = sf2.phdr()
         phdr_root.sort()
@@ -163,7 +172,7 @@ def main():
                 continue
             if i.name == "EOP":
                 continue
-                
+
             if i.bank == 128 or i.key() in t(s, "custom_drums", []):
                 idx = getFreeIndex(inst_table[i.presentno], i.bank)
                 target_map = imd_drum_list
@@ -182,16 +191,19 @@ def main():
                 phdr_root.data.remove(i)
                 continue
             name = f"{convert_name(name_table, i.name, name_len)}{suffix}"
-            target_map.append((i.presentno, idx, default_map_name, name, i.bank, i.name))
+            target_map.append(
+                (i.presentno, idx, default_map_name, name, i.bank, i.name))
             inst_table[i.presentno][idx] = name
             # TODO ドラムでbank=127の時動作するか、0と128は同じ扱いになる気がするので重複管理を修正
             i.bank = idx
         riff.write(f"{dst_dir}/{sf2_name}", sf2)
     imd_inst_list = sorted(imd_inst_list, key=cmp_to_key(imd_list_cmp))
     imd_drum_list = sorted(imd_drum_list, key=cmp_to_key(imd_list_cmp))
-    
+
     save_table(imd_inst_list, imd_drum_list, f"{dst_dir}/table.csv")
     save_vmssf(sf2_table, f"{dst_dir}/SF2Main.vmssf")
     save_imd_inst(imd_inst_list, imd_map, f"{dst_dir}/SF2Main.imd")
     save_imd_drum(imd_drum_list, imd_dram_order, f"{dst_dir}/SF2MainDrum.imd")
+
+
 main()

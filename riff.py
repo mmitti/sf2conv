@@ -1,4 +1,6 @@
 import struct
+
+
 class Riff:
     def __init__(self, tag, size, form, data, fname):
         self.tag = tag
@@ -6,12 +8,14 @@ class Riff:
         self.form = form
         self.data = data
         self.fname = fname
+
     def __str__(self):
         s = f"{self.fname} RIFF:["
         for i in self.data:
             s += str(i) + ", "
         s = s.rstrip(", ") + "]"
         return s
+
     def phdr(self):
         def f(r):
             if isinstance(r, PhdrRoot):
@@ -23,7 +27,8 @@ class Riff:
                 if j is not None:
                     return j
         return f(self)
-        
+
+
 class List:
     def __init__(self, tag, size, name, fofset, data):
         self.tag = tag
@@ -31,37 +36,45 @@ class List:
         self.name = name
         self.fofset = fofset
         self.data = data
+
     def __str__(self):
-        s =  f"{self.tag}:{self.name}["
+        s = f"{self.tag}:{self.name}["
         for i in self.data:
             s += str(i) + ", "
         s = s.rstrip(", ") + "]"
         return s
-        
+
+
 class Element:
     def __init__(self, tag, size, fofset):
         self.tag = tag
         self.size = size
         self.fofset = fofset
+
     def __str__(self):
         return f"{self.tag}({self.size})"
-        
+
+
 class PhdrRoot:
     def __init__(self, tag, size, fofset, data):
         self.tag = tag
         self.size = size
         self.fofset = fofset
         self.data = data
+
     def __str__(self):
         s = f"{self.tag}({self.size}):["
         for i in self.data:
             s += str(i) + ", "
         s = s.rstrip(", ") + "]"
         return s
+
     def sort(self):
         eof = self.data[-1]
         sd = sorted(self.data[:-1], key=lambda t: t.name)
         self.data = [*sd, eof]
+
+
 class Phdr:
     def __init__(self, name, presentno, bank, bagIndex, r0, r1, r2):
         self.name = name
@@ -71,23 +84,26 @@ class Phdr:
         self.r0 = r0
         self.r1 = r1
         self.r2 = r2
+
     def __str__(self):
         return f"{self.name}-{self.bank}/{self.presentno}"
+
     def key(self):
         return f"{self.bank}/{self.presentno}"
-            
+
+
 def __parse(f):
     tag = f.read(4).decode("ascii")
     size = struct.unpack_from("<l", f.read(4))[0]
     start = f.tell()
     if tag == "RIFF":
-        ret =  Riff(tag, size, f.read(4).decode("ascii"), [], f.name)
+        ret = Riff(tag, size, f.read(4).decode("ascii"), [], f.name)
         while f.tell() - start < size:
             ret.data.append(__parse(f))
         return ret
     if tag == "LIST":
         name = f.read(4).decode("ascii")
-        ret =  List(tag, size, name, start, [])
+        ret = List(tag, size, name, start, [])
         while f.tell() - start < size:
             ret.data.append(__parse(f))
         return ret
@@ -100,14 +116,16 @@ def __parse(f):
             e = Phdr(name, *d)
             ret.data.append(e)
         return ret
-    
+
     f.seek(start + size)
     return Element(tag, size, start)
+
 
 def read(fname):
     with open(fname, 'rb') as f:
         return __parse(f)
-        
+
+
 def __write(fo, fi, e):
     if e.tag == "RIFF":
         fo.write(struct.pack("<4sl4s", e.tag.encode(), e.size, e.form.encode()))
@@ -121,12 +139,14 @@ def __write(fo, fi, e):
         e.size = 38 * len(e.data)
         fo.write(struct.pack("<4sl", e.tag.encode(), e.size))
         for i in e.data:
-            fo.write(struct.pack("<20shhhlll", i.name.encode(), i.presentno, i.bank, i.bagIndex, i.r0, i.r1, i.r2))
+            fo.write(struct.pack("<20shhhlll", i.name.encode(),
+                                 i.presentno, i.bank, i.bagIndex, i.r0, i.r1, i.r2))
     else:
         fo.write(struct.pack("<4sl", e.tag.encode(), e.size))
         fi.seek(e.fofset)
         fo.write(fi.read(e.size))
-        
+
+
 def write(fname, riff):
     with open(fname, 'wb') as fo:
         with open(riff.fname, 'rb') as fi:
