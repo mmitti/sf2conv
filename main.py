@@ -31,14 +31,11 @@ def getFreeIndex(t, no, default=None):
 def save_table(inst, drum, dst):
     # program number, bank, map_name(None=Auto), name, src_bank, src_name
     with open(dst, 'w') as f:
-        f.write("INST\n")
-        f.write("ProgamNumber,Bank,Map,Name,SF2Bank,SF2Name\n")
+        f.write("IMD,ProgamNumber,Bank,Map,Name,SF2Key,SF2Name,Suffix\n")
         for i in inst:
-            f.write(",".join([str(j) for j in i]) + "\n")
-        f.write("DRUM\n")
-        f.write("ProgamNumber,Bank,Map,Name,SF2Bank,SF2Name\n")
+            f.write("INST,"+",".join([str(j) for j in i]) + "\n")
         for i in drum:
-            f.write(",".join([str(j) for j in i]) + "\n")
+            f.write("DRUM,"+",".join([str(j) for j in i]) + "\n")
 
 
 def save_vmssf(sf2_table, dst):
@@ -111,9 +108,9 @@ def save_imd_drum(drum, order_table, dst):
             f.write("\n")
 
 
-def convert_name(table, name, max_len, black_list=[]):
-    for b in black_list:
-        name = name.replace(b, "")
+def convert_name(table, name, max_len, custom_table={}):
+    for k, v in custom_table.items():
+        name = re.sub(f"{k}", v,  name)
     r = r'(?!([a-z] +[a-z])|([A-Z] +[A-Z])|([\d] +[\d]))(?P<c1>.) +(?P<c2>.)'
     name = re.sub(r, "\g<c1>\g<c2>", name)
     for k, v in table.items():
@@ -148,7 +145,7 @@ def main():
     inst_table = {}
     for i in range(129):
         inst_table[i] = {}
-    # imd用データ(program number, bank, map_name(None=Auto), name, src_bank, src_name)
+    # imd用データ(program number, bank, map_name(None=Auto), name, src_bank, src_name, suffix)
     imd_inst_list = []
     imd_drum_list = []
     # ドラムの順番を保持するリスト
@@ -166,6 +163,7 @@ def main():
         phdr_root = sf2.phdr()
         phdr_root.sort()
         imd_dram_order.append(s["imd_drum_map"])
+        inst_name_custom_table = t(s, "inst_name_table", {})
         for i in phdr_root.data[:]:
             if i.key() in t(s, "exclude", []):
                 phdr_root.data.remove(i)
@@ -190,9 +188,10 @@ def main():
             if idx is None:
                 phdr_root.data.remove(i)
                 continue
-            name = f"{convert_name(name_table, i.name, name_len)}{suffix}"
+
+            name = f"{convert_name(name_table, i.name, name_len, inst_name_custom_table)}{suffix}"
             target_map.append(
-                (i.presentno, idx, default_map_name, name, i.bank, i.name))
+                (i.presentno, idx, default_map_name, name, i.key(), i.name, suffix))
             inst_table[i.presentno][idx] = name
             # TODO ドラムでbank=127の時動作するか、0と128は同じ扱いになる気がするので重複管理を修正
             i.bank = idx
