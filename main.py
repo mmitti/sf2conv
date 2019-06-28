@@ -36,7 +36,7 @@ def save_table(inst, drum, dst):
             f.write("INST,"+",".join([str(j) for j in i]) + "\n")
         for i in drum:
             f.write("DRUM,"+",".join([str(j) for j in i]) + "\n")
-
+    print(f"INST MAP TABLE {dst}")
 
 def save_vmssf(sf2_table, dst):
     with open(dst, 'w') as f:
@@ -45,7 +45,7 @@ def save_vmssf(sf2_table, dst):
             f.write(f"sf{i}={n}\n")
             f.write(f"sf{i}.enabled=1\n")
             f.write(f"sf{i}.preload=0\n")
-
+    print(f"VMSSF FILE {dst}")
 
 def save_imd_inst(inst, imd_map, dst):
     table = OrderedDict()
@@ -75,7 +75,7 @@ def save_imd_inst(inst, imd_map, dst):
                 f.write(f"{idx}=N,{bn},0,{pn},{pn+1}-{bn}:{n}\n")
                 idx += 1
             f.write("\n")
-
+    print(f"IMD FILE {dst}")
 
 def save_imd_drum(drum, order_table, dst):
     table = OrderedDict()
@@ -106,7 +106,7 @@ def save_imd_drum(drum, order_table, dst):
                 f.write(f"{idx}=N,{bn},0,{pn},Dr.:{n}\n")
                 idx += 1
             f.write("\n")
-
+    print(f"IMD FILE FOR DRUM {dst}")
 
 def convert_name(table, name, max_len, custom_table={}):
     for k, v in custom_table.items():
@@ -127,12 +127,25 @@ def imd_list_cmp(a, b):
             return 0
         return -1 if a[1] < b[1] else 1
     return -1 if a[0] < b[0] else 1
+    
+def load_json(path):
+    with open(path) as f:
+        r = f.readlines()
+        json_str = ""
+        for s in r:
+            if s.strip().startswith("//"):
+                continue
+            json_str += s + "\n"
+        return json.loads(json_str)
 
 
 def main():
     conf_path = sys.argv[1]
-    with open(conf_path) as f:
-        conf = json.load(f)
+    dry_run = False
+    if len(sys.argv) == 3:
+        dry_run = sys.argv[2] == "--dry_run"
+        print("===DRY RUN===")
+    conf = load_json(conf_path)
     src_dir = os.path.dirname(conf_path)
     dst_dir = conf["dst"]
     host_root_path = conf["dst_host_path"]
@@ -195,14 +208,16 @@ def main():
             inst_table[i.presentno][idx] = name
             # TODO ドラムでbank=127の時動作するか、0と128は同じ扱いになる気がするので重複管理を修正
             i.bank = idx
-        riff.write(f"{dst_dir}/{sf2_name}", sf2)
+        if not dry_run:
+            print(f"SF2 FILE UPDATE {dst_dir}/{sf2_name}")
+            riff.write(f"{dst_dir}/{sf2_name}", sf2)
     imd_inst_list = sorted(imd_inst_list, key=cmp_to_key(imd_list_cmp))
     imd_drum_list = sorted(imd_drum_list, key=cmp_to_key(imd_list_cmp))
-
+    
     save_table(imd_inst_list, imd_drum_list, f"{dst_dir}/table.csv")
-    save_vmssf(sf2_table, f"{dst_dir}/SF2Main.vmssf")
-    save_imd_inst(imd_inst_list, imd_map, f"{dst_dir}/SF2Main.imd")
-    save_imd_drum(imd_drum_list, imd_dram_order, f"{dst_dir}/SF2MainDrum.imd")
-
+    if not dry_run:
+        save_vmssf(sf2_table, f"{dst_dir}/SF2Main.vmssf")
+        save_imd_inst(imd_inst_list, imd_map, f"{dst_dir}/SF2Main.imd")
+        save_imd_drum(imd_drum_list, imd_dram_order, f"{dst_dir}/SF2MainDrum.imd")
 
 main()
