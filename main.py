@@ -174,12 +174,12 @@ def main():
 
         sf2 = riff.read(f"{src_dir}/{sf2_name}")
         phdr_root = sf2.phdr()
-        phdr_root.sort()
+        # phdr_root.sort()
         imd_dram_order.append(s["imd_drum_map"])
         inst_name_custom_table = t(s, "inst_name_table", {})
         for i in phdr_root.data[:]:
             if i.key() in t(s, "exclude", []):
-                phdr_root.data.remove(i)
+                # phdr_root.data.remove(i)
                 continue
             if i.name == "EOP":
                 continue
@@ -199,7 +199,7 @@ def main():
                     if m["program_start"] <= i.presentno and i.presentno <= m["program_end"]:
                         default_map_name = m["name"]
             if idx is None:
-                phdr_root.data.remove(i)
+                # phdr_root.data.remove(i)
                 continue
 
             name = f"{convert_name(name_table, i.name, name_len, inst_name_custom_table)}{suffix}"
