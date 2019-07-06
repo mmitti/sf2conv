@@ -209,7 +209,7 @@ def main():
             i.bank = idx
         if not dry_run:
             print(f"SF2 FILE UPDATE {dst_dir}/{sf2_name}")
-            riff.write(f"{dst_dir}/{sf2_name}", sf2)
+            sf2.write(f"{dst_dir}/{sf2_name}")
     imd_inst_list = sorted(imd_inst_list, key=cmp_to_key(imd_list_cmp))
     imd_drum_list = sorted(imd_drum_list, key=cmp_to_key(imd_list_cmp))
     
