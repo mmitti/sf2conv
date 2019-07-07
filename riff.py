@@ -35,6 +35,13 @@ def get(l, n):
     return None
 
 
+def lstr(l):
+    s = ""
+    for i in l:
+        s += str(i) + ", "
+    return s.rstrip(", ")
+
+
 class RiffParent:
     def __init__(self, tag, name, data, _str_header):
         self.tag = tag
@@ -43,10 +50,7 @@ class RiffParent:
         self._str_header = _str_header
 
     def __str__(self):
-        for i in self.data:
-            s += str(i) + ", "
-        s = s.rstrip(", ")
-        return f"{self._str_header}:[{s}]"
+        return f"{self._str_header}:[{lstr(self.data)}]"
 
     def size(self):
         s = 4
@@ -103,17 +107,13 @@ class Element:
 
 
 class PElementRoot:
-    def __init__(self, tag, data, last):
+    def __init__(self, tag, data):
         self.tag = tag
-        self.data = data
-        self.last = last
+        self.data = data[:-1]
+        self.last = data[-1]
 
     def __str__(self):
-        s = f"{self.tag}({self.size()}):["
-        for i in self.data:
-            s += str(i) + ", "
-        s = s.rstrip(", ") + "]"
-        return s
+        return f"{self.tag}({self.size()}):[{lstr(self.data)}]"
 
     def data_with_end(self):
         return self.data + [self.last]
@@ -133,16 +133,12 @@ class PElementRoot:
 
 class PhdrRoot(PElementRoot):
     def __init__(self, tag, data):
-        tmp = []
-        for d in data:
-            if d.name == "EOP":
-                self.eop = d
-            else:
-                tmp.append(d)
-        super().__init__(tag, tmp, self.eop)
+        super().__init__(tag, data)
+        self.eop = self.last
 
     def sort(self):
         self.data = sorted(self.data, key=lambda t: t.name)
+        self.update()
 
     def init(self, pbag, pmod, pgen):
         self.pbag = pbag
@@ -163,24 +159,21 @@ class PhdrRoot(PElementRoot):
         self.pbag.data.clear()
         self.pmod.data.clear()
         self.pgen.data.clear()
-        bidx = 0
-        midx = 0
-        gidx = 0
+        self.eop.bagIndex = 0
+        self.pbag.eob.modIndex = 0
+        self.pbag.eob.genIndex = 0
         for i in self.data:
-            i.bagIndex = bidx
+            i.bagIndex = self.eop.bagIndex
             for b in i.bag:
-                b.genIndex = gidx
+                b.genIndex = self.pbag.eob.genIndex
                 for g in b.gen:
                     self.pgen.data.append(g)
-                    gidx += 1
+                    self.pbag.eob.genIndex += 1
                 for m in b.mod:
                     self.pmod.data.append(m)
-                    midx += 1
+                    self.pbag.eob.modIndex += 1
                 self.pbag.data.append(b)
-                bidx += 1
-        self.eop.bagIndex = bidx
-        self.pbag.eob.genIndex = gidx
-        self.pbag.eob.modIndex = midx
+                self.eop.bagIndex += 1
 
     def write(self, istream, ostream):
         self.update()
@@ -199,11 +192,7 @@ class Phdr:
         self.bag = []
 
     def __str__(self):
-        s = ""
-        for i in self.bag:
-            s += str(i) + ", "
-        s = s.rstrip(", ")
-        return f"{self.name}-{self.bank}/{self.presentno}({self.bagIndex}[{s}])"
+        return f"{self.name}-{self.bank}/{self.presentno}({self.bagIndex}[{lstr(self.bag)}])"
 
     def key(self):
         return f"{self.bank}/{self.presentno}"
@@ -218,8 +207,8 @@ class Phdr:
 
 class PbagRoot(PElementRoot):
     def __init__(self, tag, data):
-        self.eob = data[-1]
-        super().__init__(tag, data[:-1], self.eob)
+        super().__init__(tag, data)
+        self.eob = self.last
 
 
 class Pbag:
@@ -230,15 +219,7 @@ class Pbag:
         self.mod = []
 
     def __str__(self):
-        gs = ""
-        for i in self.gen:
-            gs += str(i) + ", "
-        gs = gs.rstrip(", ")
-        ms = ""
-        for i in self.mod:
-            ms += str(i) + ", "
-        ms = ms.rstrip(", ")
-        return f"<{self.genIndex}:[{gs}], {self.modIndex}:[{ms}]>"
+        return f"<{self.genIndex}:[{lstr(self.gen)}], {self.modIndex}:[{lstr(self.mod)}]>"
 
     def size(self):
         return 4
@@ -249,8 +230,8 @@ class Pbag:
 
 class PmodRoot(PElementRoot):
     def __init__(self, tag, data):
-        self.eom = data[-1]
-        super().__init__(tag, data[:-1], self.eom)
+        super().__init__(tag, data)
+        self.eom = self.last
 
 
 class Pmod:
@@ -274,8 +255,8 @@ class Pmod:
 
 class PgenRoot(PElementRoot):
     def __init__(self, tag, data):
-        self.eog = data[-1]
-        super().__init__(tag, data[:-1], self.eog)
+        super().__init__(tag, data)
+        self.eog = self.last
 
 
 class Pgen:
